@@ -96,6 +96,21 @@ const count = async ( req, res = response) => {
     }
 }
 
+const editarActividad = async ( req, res = response ) => {
+    const {id} = req.params
+
+    try {
+        
+        await actividadModel.updateOne({ _id: id }, req.body)
+        res.status(200).json({
+            ok: true
+        })
+    } catch (error) {
+        console.log(error)
+        
+    }
+}
+
 
 
 module.exports = {
@@ -103,5 +118,6 @@ module.exports = {
     getActividad,
     crearActividad,
     eliminarActividad,
+    editarActividad,
     count
 }

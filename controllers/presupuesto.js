@@ -3,6 +3,7 @@ const {response} = require('express');
 const actividadModel = require('../models/ActividadModel');
 const presupuestoModel = require('../models/PresupuestoModel');
 const { default: mongoose } = require('mongoose');
+const { validationResult } = require('express-validator')
 
 const getPresupuestos = async(req, res = response) => {
     try {
@@ -48,27 +49,36 @@ const crearPresupuesto = async(req, res = response) => {
 
  
     try {
-        const pre={
-            fecha:  req.body.fecha ,
-            total: req.body.total ,
-            listActividades: req.body.listActividades ,
-            cliente: req.body.cliente, 
+
+        const errors = validationResult (req );
+        if(!errors.isEmpty()){
+            
+            return res.json({
+                ok: false,
+                errors : errors.mapped()
+            })
+            
+        }else{
+            
+            const pre={
+                fecha:  req.body.fecha ,
+                total: req.body.total ,
+                listActividades: req.body.listActividades ,
+                cliente: req.body.cliente, 
+            }
+            
+            const presupuesto = new presupuestoModel(pre);
+            await presupuesto.save();
+            
+            
+            res.status(201).json({
+                ok: true,
+                msg: 'registrado',
+              })
         }
 
-        
-        const presupuesto = new presupuestoModel(pre);
-
-        
-        await presupuesto.save();
-        
-        
-        res.status(201).json({
-            ok: true,
-            msg: 'registrado',
-        })
-
     } catch (error) {
-        console.log(error)
+        //console.log(error)
         res.status(500).json({
             ok:false,
             msg: 'Por favor hable con el administrador'
@@ -79,59 +89,76 @@ const crearPresupuesto = async(req, res = response) => {
 
 
 const calculoPresupuesto = async(req, res = response) => {
-    const monto = req.params.monto
 
-    let listPrueba = [];
-    let listadoIndex = []; 
-
-
-    const cantidadActividades =  await actividadModel.count();
-
-
-    let suma = 0;
-    
-    while (suma < monto){
-        let id_actividad = parseInt((Math.random() * cantidadActividades + 1));
-        if (!listadoIndex.includes(id_actividad)) {
-            listadoIndex.push(id_actividad);
-            let prueba = await actividadModel.findOne({id_actividad});
-            let min = prueba.cantidad_min;
-            let max = prueba.cantidad_max;
-            let cantidad = (Math.random() * ((max + 1) - min)) + min;
-            let precio_unitario = prueba.precio_unitario;
-            let total = cantidad * precio_unitario;
-
-            suma += total;
-
-            let actividadPrueba = {
-                id_actividad: id_actividad,
-                descripcion: prueba.descripcion,
-                unidad: prueba.unidad,
-                cantidad: cantidad,
-                precio_unitario: precio_unitario,
-                total: total
-            }
-            listPrueba.push(actividadPrueba); 
-            listPrueba.sort(function (a, b) {
-                if (a.id_actividad > b.id_actividad) {
-                  return 1;
-                }
-                if (a.id_actividad < b.id_actividad) {
-                  return -1;
-                }
-                // a must be equal to b
-                return 0;
-              });
-        
+    try {
+        const errors = validationResult (req );
+        if(!errors.isEmpty()){
             
-        }
+            return res.json({
+                ok: false,
+                errors : errors.mapped()
+            })
+            
+        }else{
+                const monto = req.params.monto
+            
+                let listPrueba = [];
+                let listadoIndex = []; 
+            
+            
+                const cantidadActividades =  await actividadModel.count();
+            
+            
+                let suma = 0;
+                
+                while (suma < monto){
+                    let id_actividad = parseInt((Math.random() * cantidadActividades + 1));
+                    if (!listadoIndex.includes(id_actividad)) {
+                        listadoIndex.push(id_actividad);
+                        let prueba = await actividadModel.findOne({id_actividad});
+                        let min = prueba.cantidad_min;
+                        let max = prueba.cantidad_max;
+                        let cantidad = (Math.random() * ((max + 1) - min)) + min;
+                        let precio_unitario = prueba.precio_unitario;
+                        let total = cantidad * precio_unitario;
+            
+                        suma += total;
+            
+                        let actividadPrueba = {
+                            id_actividad: id_actividad,
+                            descripcion: prueba.descripcion,
+                            unidad: prueba.unidad,
+                            cantidad: cantidad,
+                            precio_unitario: precio_unitario,
+                            total: total
+                        }
+                        listPrueba.push(actividadPrueba); 
+                        listPrueba.sort(function (a, b) {
+                            if (a.id_actividad > b.id_actividad) {
+                            return 1;
+                            }
+                            if (a.id_actividad < b.id_actividad) {
+                            return -1;
+                            }
+                            return 0;
+                        });
+                    
+                        
+                    }
+                }
+                
+                res.json({
+                    listPrueba,
+                    suma
+                })
+            }
+    } catch (error) {
+        console.log(error)
     }
-    
-    res.json({
-        listPrueba,
-        suma
-    })
+
 }
+
+
 
 const parseId = ( id ) => {
     return mongoose.Types.ObjectId( id )

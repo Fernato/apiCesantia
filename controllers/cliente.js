@@ -1,6 +1,7 @@
 
 const {response} = require('express');
 const clienteModel = require('../models/ClienteModel')
+const { validationResult } = require('express-validator')
 
 
 const parseId = ( id ) => {
@@ -35,26 +36,43 @@ const getCliente = async( req, res = response ) => {
 
 const crearCliente = async(req, res = response) => {
 
-    const {cedula, nombre, apellido, direccion, ciudad} = req.body
+    const {cedula} = req.body
+
+    //Manejo de errores
+
+    
+    
 
     try {
 
-        let cliente = await clienteModel.findOne({ cedula })
-        if (cliente) {
-            return res.status(400).json({
+        const errors = validationResult (req );
+        if(!errors.isEmpty()){
+
+            return res.json({
                 ok: false,
-                msg: 'EL cliente ya existe'
+                errors : errors.mapped()
             })
+
         }else{
 
-            cliente = new clienteModel(req.body);
-            await cliente.save();
-            
-            res.status(201).json({
-                ok: true,
-                msg: 'registrado',
-            })
+            let cliente = await clienteModel.findOne({ cedula })
+            if (cliente) {
+                return res.status(400).json({
+                    ok: false,
+                    msg: 'EL cliente ya existe'
+                })
+            }else{
+    
+                cliente = new clienteModel(req.body);
+                await cliente.save();
+                
+                res.status(201).json({
+                    ok: true,
+                    msg: 'registrado',
+                })
+            }
         }
+
         
 
     } catch (error) {
@@ -65,6 +83,21 @@ const crearCliente = async(req, res = response) => {
         })
     }
   
+}
+
+const editarCliente = async ( req, res = response ) => {
+    const {id} = req.params
+
+    try {
+        
+        await clienteModel.updateOne({ _id: id }, req.body)
+        res.status(200).json({
+            ok: true
+        })
+    } catch (error) {
+        console.log(error)
+        
+    }
 }
 
 const eliminarCliente = async( req, res = response) => {
@@ -95,5 +128,6 @@ module.exports = {
     getClientes,
     getCliente,
     crearCliente,
+    editarCliente,
     eliminarCliente
 }
