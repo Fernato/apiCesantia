@@ -116,13 +116,23 @@ const revalidadToken = async(req, res = response) => {
 
     //Generar JWT
 
-    const token = await generarJWT ( uid );
+    try {
+        const token = await generarJWT ( uid );
 
-    res.json({
-        ok:true,
-        uid,
-        token
-    })
+        res.json({
+            ok:true,
+            uid,
+            token
+        })
+        
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({
+            ok:false
+        })
+    }
+
+   
 
 }
 
