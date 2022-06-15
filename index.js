@@ -33,7 +33,7 @@ app.use('/api/login', require('./routs/usuario'));
 
 // Escuchar peticiones
 
-const port = process.env.PORT || 4000;
+const port = process.env.PORT || 5000;
 
 app.listen(port , () => {
     console.log(`Servidor corriendo en puerto ${port}` );
