@@ -20,6 +20,7 @@
     "mongoose": "^6.2.8",
     "mysql": "^2.18.1",
     "mysql2": "^2.3.3",
+    "require-stack": "^1.0.2",
     "sequelize": "^6.17.0"
   }
 }
